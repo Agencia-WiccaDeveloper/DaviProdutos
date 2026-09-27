@@ -19,8 +19,16 @@ import { lerSessao } from "@/lib/auth";
 import { lerCarrinho, precoUnitario } from "@/services/carrinho";
 import { criarPagamentoPix } from "@/services/integracoes/pagamento/mercado-pago";
 import { notificarNovoPedidoWhatsApp } from "@/services/integracoes/whatsapp/notificar";
+import { calcularFrete, cidadePermitida, cepPermitido } from "@/config/frete";
 
-export type EstadoCheckout = { erro?: string };
+export type EstadoCheckout = {
+  erro?: string;
+  pixData?: {
+    qrCode: string | null;
+    qrCodeBase64: string | null;
+    expiresAt: number | null;
+  };
+};
 
 /** Gera um código de retirada único e difícil de adivinhar (ex.: DAVI-482731). */
 function gerarPickupCode(): string {
@@ -48,14 +56,30 @@ export async function finalizarPedido(
     return { erro: "Forma de pagamento inválida." };
   }
 
-  // Valida o endereço pertence ao usuário (somente para entrega)
+  // Valida o endereço pertence ao usuário e está na área de entrega (somente para entrega)
+  let enderecoData: { cidade: string; cep: string; rua: string; numero: string; estado: string } | null = null;
   if (!ehRetirada) {
     const [endereco] = await db
-      .select({ id: addresses.id })
+      .select({
+        id: addresses.id,
+        cidade: addresses.cidade,
+        cep: addresses.cep,
+        rua: addresses.rua,
+        numero: addresses.numero,
+        estado: addresses.estado,
+      })
       .from(addresses)
       .where(and(eq(addresses.id, addressId), eq(addresses.userId, sessao.uid)))
       .limit(1);
     if (!endereco) return { erro: "Endereço inválido." };
+    enderecoData = endereco;
+
+    // Validação de área de entrega
+    if (!cidadePermitida(endereco.cidade) || !cepPermitido(endereco.cep)) {
+      return {
+        erro: `Entrega não disponível para ${endereco.cidade}/${endereco.cep}. Áreas atendidas: Jacareí, São José dos Campos e Caçapava.`,
+      };
+    }
   }
 
   const itens = await lerCarrinho();
@@ -83,8 +107,8 @@ export async function finalizarPedido(
     (soma, i) => soma + precoUnitario(i) * i.quantidade,
     0,
   );
-  // Retirada na loja: sem frete. Entrega: grátis acima de R$199.
-  const frete = ehRetirada ? 0 : subtotal >= 199 ? 0 : 19.9;
+  const subtotalCentavos = Math.round(subtotal * 100);
+  const frete = calcularFrete(subtotalCentavos, tipoEntrega as "ENTREGA" | "RETIRADA") / 100;
   const total = subtotal + frete;
 
   const idempotencyKey = randomUUID();
@@ -149,20 +173,8 @@ export async function finalizarPedido(
     .limit(1);
 
   let entregaDescricao = "Retirada na loja (pronto em 2h)";
-  if (!ehRetirada && addressId) {
-    const [end] = await db
-      .select({
-        rua: addresses.rua,
-        numero: addresses.numero,
-        cidade: addresses.cidade,
-        estado: addresses.estado,
-      })
-      .from(addresses)
-      .where(eq(addresses.id, addressId))
-      .limit(1);
-    if (end) {
-      entregaDescricao = `${end.rua}, ${end.numero} — ${end.cidade}/${end.estado}`;
-    }
+  if (!ehRetirada && addressId && enderecoData) {
+    entregaDescricao = `${enderecoData.rua}, ${enderecoData.numero} — ${enderecoData.cidade}/${enderecoData.estado}`;
   }
 
   const rotuloMetodo =
@@ -189,7 +201,7 @@ export async function finalizarPedido(
     total: total.toFixed(2),
   });
 
-  // Cria a cobrança PIX no Mercado Pago (em teste).
+  // Cria a cobrança PIX no Mercado Pago
   if (pagamento === "PIX") {
     try {
       const pix = await criarPagamentoPix({
@@ -210,11 +222,20 @@ export async function finalizarPedido(
           paymentExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
         })
         .where(eq(orders.id, pedido.id));
-    } catch {
-      // Sem token de teste/configuração, o pedido continua PENDING e a página
-      // do pedido informa que o pagamento aguarda configuração.
+
+      // Retorna dados do PIX para exibir QR Code na tela de checkout (em vez de redirect)
+      return {
+        pixData: {
+          qrCode: pix.qrCode,
+          qrCodeBase64: pix.qrCodeBase64,
+          expiresAt: pix.qrCode ? Date.now() + 60 * 60 * 1000 : null,
+        },
+      };
+    } catch (e) {
+      // Sem token de teste/configuração, o pedido continua PENDING
+      console.error("[checkout] Erro ao criar PIX:", e);
+      return { erro: "Erro ao gerar pagamento PIX. Tente novamente." };
     }
-    redirect(`/conta/pedidos/${pedido.id}`);
   }
 
   if (pagamento === "CARTAO") {
@@ -227,4 +248,3 @@ export async function finalizarPedido(
   // O dono já foi notificado via WhatsApp.
   redirect(`/conta/pedidos/${pedido.id}`);
 }
-

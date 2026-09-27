@@ -7,6 +7,7 @@ import { addresses } from "@/db/schema";
 import { lerSessao } from "@/lib/auth";
 import { lerCarrinho, precoUnitario, subtotalItem } from "@/services/carrinho";
 import { CheckoutForm } from "./checkout-form";
+import { calcularFrete, cidadePermitida, cepPermitido } from "@/config/frete";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -26,7 +27,16 @@ export default async function CheckoutPage() {
   if (itens.length === 0) redirect("/carrinho");
 
   const subtotal = itens.reduce((soma, i) => soma + subtotalItem(i), 0);
-  const frete = subtotal >= 199 ? 0 : 19.9;
+  const subtotalCentavos = Math.round(subtotal * 100);
+
+  // Validação de área de entrega para endereços salvos
+  const enderecosValidos = enderecos.map((e) => ({
+    ...e,
+    areaPermitida: cidadePermitida(e.cidade) && cepPermitido(e.cep),
+  }));
+
+  // Frete padrão para entrega (sem endereço específico ainda - será recalculado no form)
+  const frete = calcularFrete(subtotalCentavos, "ENTREGA") / 100;
   const total = subtotal + frete;
 
   return (
@@ -36,7 +46,7 @@ export default async function CheckoutPage() {
       </h1>
 
       <CheckoutForm
-        enderecos={enderecos.map((e) => ({
+        enderecos={enderecosValidos.map((e) => ({
           id: e.id,
           destinatario: e.destinatario,
           rua: e.rua,
@@ -47,6 +57,7 @@ export default async function CheckoutPage() {
           estado: e.estado,
           cep: e.cep,
           principal: e.principal,
+          areaPermitida: e.areaPermitida,
         }))}
         itens={itens.map((i) => ({
           itemId: i.itemId,

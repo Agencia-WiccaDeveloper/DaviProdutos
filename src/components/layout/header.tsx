@@ -115,36 +115,71 @@ export async function Header() {
           {/* Ações */}
           <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
             {sessao ? (
-              <Link
-                href="/conta"
-                className="relative hidden min-w-11 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-slate-600 transition-colors hover:bg-slate-50 hover:text-brand-700 sm:flex"
-              >
-                <span className="relative h-6 w-6 overflow-hidden rounded-full bg-brand-100">
-                  {avatarUsuario ? (
-                    <Image
-                      src={avatarUsuario}
-                      alt=""
-                      fill
-                      sizes="24px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-brand-700">
-                      {sessao.nome.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
-                <span className="hidden text-[10px] font-semibold leading-none lg:block">
-                  {sessao.nome.split(" ")[0]}
-                </span>
-              </Link>
+              <>
+                {/* Mobile: apenas avatar/ícone */}
+                <Link
+                  href="/conta"
+                  className="relative flex min-w-10 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-slate-600 transition-colors hover:bg-slate-50 hover:text-brand-700 lg:hidden"
+                  aria-label="Minha conta"
+                >
+                  <span className="relative h-6 w-6 overflow-hidden rounded-full bg-brand-100">
+                    {avatarUsuario ? (
+                      <Image
+                        src={avatarUsuario}
+                        alt=""
+                        fill
+                        sizes="24px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-brand-700">
+                        {sessao.nome.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+                {/* Desktop: avatar + nome */}
+                <Link
+                  href="/conta"
+                  className="relative hidden min-w-11 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-slate-600 transition-colors hover:bg-slate-50 hover:text-brand-700 sm:flex"
+                >
+                  <span className="relative h-6 w-6 overflow-hidden rounded-full bg-brand-100">
+                    {avatarUsuario ? (
+                      <Image
+                        src={avatarUsuario}
+                        alt=""
+                        fill
+                        sizes="24px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-brand-700">
+                        {sessao.nome.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                  <span className="hidden text-[10px] font-semibold leading-none lg:block">
+                    {sessao.nome.split(" ")[0]}
+                  </span>
+                </Link>
+              </>
             ) : (
-              <ActionLink
-                href="/conta"
-                icon={User}
-                label="Minha conta"
-                className="hidden sm:flex"
-              />
+              <>
+                {/* Mobile: ícone "Minha conta" */}
+                <ActionLink
+                  href="/conta"
+                  icon={User}
+                  label="Minha conta"
+                  className="lg:hidden"
+                />
+                {/* Desktop: ícone + label */}
+                <ActionLink
+                  href="/conta"
+                  icon={User}
+                  label="Minha conta"
+                  className="hidden lg:flex"
+                />
+              </>
             )}
             <ActionLink
               href="/favoritos"

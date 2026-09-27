@@ -85,17 +85,17 @@ export default function EmBrevePage() {
                   <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                     E-mail
                   </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@daviprodutos.com.br"
-                    className="mt-1"
-                    required
-                    disabled={carregando}
-                  />
+<Input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="mt-1"
+                      required
+                      disabled={carregando}
+                    />
                 </div>
 
                 <div>
