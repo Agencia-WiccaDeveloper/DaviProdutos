@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  /* ===== DAVI PRODUTOS — Identidade (azul) ===== */
+  --color-brand-50: #eef5fd;
+  --color-brand-100: #d9e8fa;
+  --color-brand-200: #b3d1f5;
+  --color-brand-300: #7fb2ed;
+  --color-brand-400: #4a8fe3;
+  --color-brand-500: #1f6fd0;
+  --color-brand-600: #0f56ad;
+  --color-brand-700: #0d4488;
+  --color-brand-800: #0c376c;
+  --color-brand-900: #0a2a51;
+  --color-brand-950: #061a34;
+
+  --color-surface: #f5f7fa;
+  --color-ink: #0f172a;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow), var(--font-inter), sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-surface text-ink antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-brand-600 text-white;
+  }
+
+  /* Torna os toques em botões mais responsivos no mobile */
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Esconde a barra de rolagem (carrosséis horizontais) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ===== Animações (Fase 13) ===== */
+@keyframes davi-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes davi-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes davi-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Utilitários de animação */
+@utility animate-fade-up {
+  animation: davi-fade-up 0.5s ease-out both;
+}
+
+@utility animate-fade-in {
+  animation: davi-fade-in 0.4s ease-out both;
+}
+
+@utility animate-scale-in {
+  animation: davi-scale-in 0.3s ease-out both;
+}
+
+/* Delay progressivos para listas */
+@utility stagger-1 {
+  animation-delay: 50ms;
+}
+@utility stagger-2 {
+  animation-delay: 100ms;
+}
+@utility stagger-3 {
+  animation-delay: 150ms;
+}
+@utility stagger-4 {
+  animation-delay: 200ms;
+}
+@utility stagger-5 {
+  animation-delay: 250ms;
+}
+
+/* Respeita usuários que preferem menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

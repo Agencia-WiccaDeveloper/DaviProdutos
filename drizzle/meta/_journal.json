@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1789849271599,
+      "tag": "0000_cuddly_snowbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1789941802236,
+      "tag": "0001_password_resets",
+      "breakpoints": true
+    }
+  ]
+}
